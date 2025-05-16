@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Image to PPTX Converter</title>
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.11.0/dist/pptxgen.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    #image-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .image-preview img {
+      max-width: 150px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Upload Images to Create PPTX</h2>
+<input type="file" id="imageInput" accept="image/*">
+<div id="image-list"></div>
+<button onclick="downloadPptx()">Download .pptx</button>
+
+<script>
+  let images = [];
+
+  document.getElementById("imageInput").addEventListener("change", function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      const imgData = event.target.result;
+      images.push(imgData);
+      showImagePreview(imgData);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  });
+
+  function showImagePreview(dataUrl) {
+    const container = document.createElement("div");
+    container.classList.add("image-preview");
+    const img = document.createElement("img");
+    img.src = dataUrl;
+    container.appendChild(img);
+    document.getElementById("image-list").appendChild(container);
+  }
+
+  async function downloadPptx() {
+    if (images.length === 0) {
+      alert("Please upload at least one image.");
+      return;
+    }
+
+    const pptx = new PptxGenJS();
+
+    images.forEach((imgData) => {
+      const slide = pptx.addSlide();
+      slide.addImage({
+        data: imgData,
+        x: 0,
+        y: 0,
+        w: "100%",
+        h: "100%"
+      });
+    });
+
+    await pptx.writeFile({ fileName: "MyPresentation.pptx" });
+  }
+</script>
+
+</body>
+</html>
