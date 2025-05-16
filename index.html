@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Image Compressor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    input[type="file"] {
+      margin-bottom: 20px;
+    }
+
+    #outputImage {
+      margin-top: 20px;
+      max-width: 100%;
+      height: auto;
+      display: none;
+    }
+
+    #downloadLink {
+      display: none;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+
+    #downloadLink:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Compress Image Under 1MB</h2>
+    <input type="file" accept="image/*" id="imageInput" />
+    <img id="outputImage" />
+    <a id="downloadLink" download="compressed-image.jpg">Download Compressed Image</a>
+  </div>
+
+  <script>
+    const input = document.getElementById('imageInput');
+    const outputImage = document.getElementById('outputImage');
+    const downloadLink = document.getElementById('downloadLink');
+
+    input.addEventListener('change', async function () {
+      const file = this.files[0];
+      if (!file || !file.type.startsWith('image/')) {
+        alert('Please upload a valid image file.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async function (event) {
+        const img = new Image();
+        img.onload = async function () {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          const maxWidth = 1024;
+          const scale = Math.min(maxWidth / img.width, 1);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          let quality = 0.9;
+          let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+
+          while (compressedDataUrl.length > 1000000 && quality > 0.1) {
+            quality -= 0.05;
+            compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
+
+          if (compressedDataUrl.length > 1000000) {
+            alert("Couldn't compress image below 1MB. Try a smaller image.");
+            return;
+          }
+
+          outputImage.src = compressedDataUrl;
+          outputImage.style.display = 'block';
+          downloadLink.href = compressedDataUrl;
+          downloadLink.style.display = 'inline-block';
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>
